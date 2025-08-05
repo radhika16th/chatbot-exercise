@@ -10,10 +10,10 @@ To build a chatbot using Gemini or an open-source LLM that suggests safe and rec
 
 ## Tools
 
-Language Model: Google Gemini or HuggingFace (Mistral?)
-Interface: Flask or FastAPI
-Prompt Safety: System prompts for safety
-Hosting: Local env
+- Language Model: Google Gemini or HuggingFace (Mistral?)
+- Interface: Flask or FastAPI
+- Prompt Safety: System prompts for safety
+- Hosting: Local env
 
 ## Steps
 
@@ -25,9 +25,9 @@ Hosting: Local env
 
 ## Challenges
 
-Making sure that the suggestions are medically safe
-Avoid hallucinations
-API rate limits and token costs when using Gemini
+- Making sure that the suggestions are medically safe
+- Avoid hallucinations
+- API rate limits and token costs when using Gemini
 
 ## Outcome
 
