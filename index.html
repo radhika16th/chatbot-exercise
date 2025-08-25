@@ -48,10 +48,46 @@
             display:flex;
             gap:8px
         }
+
+        /* The assistant bubble look */
+        /* label spacing */
+        .card strong { 
+            display:block; 
+            margin:0 0 4px; 
+        }
+
+        /* AI content */
+        .assistant {
+            padding-left: 16px;        /* indent under “Assistant:” */
+            font-size: 1.05rem;
+            line-height: 1.6;           /* was 1.9 */
+        }
+
+        .assistant > :first-child { 
+            margin-top: 0 !important; 
+        }
+
+        .assistant p { 
+            margin: 0 0 0.6rem; 
+        }   /* was 1rem */
+
+        .assistant h4 { 
+            margin: .2rem 0 .35rem; 
+            font-weight: 700; 
+        }
+
+        .assistant ol { 
+            margin: .2rem 0 .6rem 1.25rem; 
+            padding-left: 1.1rem; 
+        }
+
+        .assistant li { 
+            margin: .2rem 0; 
+        }
     </style>
 
     <h1>
-        Exercise Chatbot (Local, Streaming)
+        Exercise Chatbot
     </h1>
 
     <form id="f">
@@ -63,45 +99,124 @@
             <button id="stop" type="button" disabled>Stop</button>
         </div>
     </form>
-    
+
     <div class="card">
-        <strong>
-            Assistant:
-        </strong> 
-        <div id="out"></div>
+        <strong>Assistant:</strong>
+        <div id="out" class="assistant raw"></div>
     </div>
 
     <p class="small">⚠️ Educational only. Not medical advice. If you have severe pain or red-flag symptoms, seek urgent care.</p>
         
     <script>
+        (() => {
         let es = null;
         const form = document.getElementById('f');
-        const out  = document.getElementById('out');
+        const out  = document.getElementById('out');   // <div id="out" class="assistant"></div> recommended
         const btn  = document.getElementById('btn');
         const stop = document.getElementById('stop');
 
-        function cleanup(){
-            if (es) { 
-                es.close(); es = null; 
+        let rawBuffer = "";  // full text accumulator
+
+        function setUI(busy) {
+            btn.disabled = busy;
+            btn.textContent = busy ? 'Thinking…' : 'Get suggestions';
+            stop.disabled = !busy;
+        }
+        function cleanup() { if (es) { es.close(); es = null; } setUI(false); }
+
+        function escapeHtml(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+        function renderPretty(text){
+            text = (text || '').replace(/\r/g, '').trim();
+
+            // a) Add a space when a sentence is glued to the next word: "seat.Do" -> "seat. Do"
+            text = text.replace(/([.!?])(?=[A-Za-z])/g, '$1 ');
+
+            // b) Make sure headings start on their own line (handles "...worsens.Exercise Suggestions:")
+            text = text.replace(
+                /([^\n])\s*(?=(Screening Confirmation:|Exercise Suggestions?:|Movements?:|Things to avoid:|Disclaimer:))/gi,
+                (_, a) => a + "\n"
+            );
+
+            // c) Put numbers on a new line if glued: "etc.2." -> "etc.\n2."
+            text = text.replace(/:\s*(\d+\.)/g, ':\n$1')
+                        .replace(/([.?!])\s*(\d+\.)/g, '$1\n$2');
+
+            // d) Light paragraph breaks between sentences that look like paragraph starts
+            text = text.replace(/([.?!])\s+(?=[A-Z(])/g, '$1\n\n');
+
+            const lines = text.split(/\n+/);
+            const headingRx = /^(screening confirmation:|exercise suggestions?:|movements?:|things to avoid:|disclaimer:)/i;
+
+            let html = '';
+            let inList = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+
+                if (headingRx.test(line)) {
+                if (inList) { html += '</ol>'; inList = false; }
+                const m = line.match(headingRx);
+                const title = m[1].replace(/^\w/, ch => ch.toUpperCase());
+                const rest = line.slice(m[0].length).trim();
+                html += `<h4>${escapeHtml(title)}</h4>`;
+                if (rest) html += `<p>${escapeHtml(rest)}</p>`;
+                continue;
+                }
+
+                // Numbered list item ("1. ...")
+                let m = line.match(/^(\d+)\.\s*(.*)$/);
+                if (m) {
+                if (!inList) { html += '<ol>'; inList = true; }
+                let item = (m[2] || '').trim();
+                while (i + 1 < lines.length) {
+                    const peek = lines[i + 1].trim();
+                    if (!peek) { i++; continue; }
+                    if (/^\d+\.\s*/.test(peek) || headingRx.test(peek)) break;
+                    item += (item && !/[.?!:]$/.test(item) ? ' ' : '') + peek;
+                    i++;
+                }
+                item = item.replace(/\s*\d+\.\s*$/, ''); // strip trailing “2.” if glued
+                if (!item) item = '&nbsp;';
+                html += `<li>${escapeHtml(item)}</li>`;
+                continue;
+                }
+
+                // Regular paragraph
+                if (inList) { html += '</ol>'; inList = false; }
+                html += `<p>${escapeHtml(line)}</p>`;
             }
-            btn.disabled = false; btn.textContent = 'Get suggestions';
-            stop.disabled = true;
+            if (inList) html += '</ol>';
+
+            return html;  // ⬅️ IMPORTANT: no placeholder <p></p>
         }
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (es) es.close();
+
             const q = new FormData(form).get('q') || '';
-            out.textContent = '';
-            btn.disabled = true; btn.textContent = 'Thinking…';
-            stop.disabled = false;
-            // *** Key change: stream from the SAME route '/' ***
+            rawBuffer = '';
+            out.innerHTML = '';          // start clean
+            out.classList.remove('raw'); // we render HTML immediately
+            setUI(true);
+
             es = new EventSource('/events?q=' + encodeURIComponent(q));
-            es.onmessage = (ev) => { out.textContent += ev.data; window.scrollTo(0, document.body.scrollHeight); };
-            es.addEventListener('done', cleanup);
-            es.onerror = cleanup;
+
+            es.onmessage = (ev) => {
+            rawBuffer += ev.data;
+            out.innerHTML = renderPretty(rawBuffer);   // <-- format WHILE streaming
+            window.scrollTo(0, document.body.scrollHeight);
+            };
+
+            es.addEventListener('done', () => { cleanup(); });
+            es.onerror = () => { cleanup(); };
         });
 
-        stop.addEventListener('click', () => { cleanup(); });
+        // Stop button: stop streaming; keep whatever is formatted so far
+        stop.addEventListener('click', () => { if (es) es.close(); cleanup(); });
+        })();
     </script>
+
 </html>
