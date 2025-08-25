@@ -31,6 +31,14 @@ BODY_PARTS = {
     "chest","rib","head","headache"
 }
 
+RED_MSG = (
+    "I’m noticing possible red flags based on what you wrote. "
+    "Please seek prompt in-person care before starting exercise. "
+    "General advice: rest, gentle breathing, comfortable positions. "
+    "This is not medical advice."
+)
+
+
 def looks_like_symptom(text: str) -> bool:
     s = (text or "").lower()
     return (any(w in s for w in SYMPTOM_WORDS | BODY_PARTS) and len(s.split()) >= 3)
@@ -111,44 +119,41 @@ def build_prompt(user_text: str, grounding_json: str) -> str:
     }]
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
-# --------------------------
-# Non-streaming fallback (kept for POST)
-# --------------------------
-@torch.inference_mode()
-def respond(user_text: str) -> str:
-    if not looks_like_symptom(user_text):
-        return NON_SYMPTOM_MSG
-    if classify(user_text) == "red":
-        return ("I’m noticing possible red flags based on what you wrote. "
-                "Please seek prompt in-person care before starting exercise. "
-                "General advice: rest, gentle breathing, comfortable positions. "
-                "This is not medical advice.")
-
-    key = classify(user_text)
-    g = EXDB.get(key, {}) if key else {}
-    # Trim grounding to essentials (speeds up tokenization & prefill)
-    g = {"moves": (g.get("moves") or [])[:6]} if g else {}
-    grounding = json.dumps(g, ensure_ascii=False)
-
-    prompt = build_prompt(user_text, grounding)
-    inputs = tok(prompt, return_tensors="pt")
+def stream_model_prompt(prompt_text: str):
+    inputs = tok(prompt_text, return_tensors="pt")
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
 
-    out = model.generate(
-        **inputs,
-        max_new_tokens=MAX_NEW_TOKENS,
-        do_sample=DO_SAMPLE,
-        temperature=TEMPERATURE if DO_SAMPLE else None,
-        top_p=TOP_P if DO_SAMPLE else None,
-        repetition_penalty=REPETITION_PENALTY,
-        eos_token_id=eos_id,
-        pad_token_id=pad_id,
-        use_cache=True,
-    )
+    def event_stream():
+        try:
+            for chunk in stream_generate(inputs):  # <-- same TextIteratorStreamer path
+                yield f"data: {chunk}\n\n"
+        except GeneratorExit:
+            return
+        except Exception as e:
+            yield f"event: error\ndata: {type(e).__name__}: {e}\n\n"
+        finally:
+            yield "event: done\ndata: end\n\n"
 
-    gen_only = out[0][inputs["input_ids"].shape[1]:]
-    return tok.decode(gen_only, skip_special_tokens=True).strip()
+    return Response(stream_with_context(event_stream()),
+                    mimetype="text/event-stream",
+                    headers={
+                        "Cache-Control": "no-cache",
+                        "Connection": "keep-alive",
+                        "X-Accel-Buffering": "no",
+                    })
 
+def build_repeat_prompt(text: str) -> str:
+    """
+    Build a chat prompt that makes the model output *exactly* `text`.
+    We use a narrow 'repeat server' system instruction to avoid extra words.
+    """
+    messages = [
+        {"role": "system",
+         "content": "You are a repeat server. Output exactly the user-provided text, "
+                    "with no extra words, no quotes, no formatting."},
+        {"role": "user", "content": text}
+    ]
+    return tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 # --------------------------
 # Streaming helper (SSE)
@@ -176,69 +181,25 @@ def stream_generate(inputs: dict):
     for new_text in streamer:
         yield new_text
 
-def stream_fixed_message(msg: str, step: int = 1, delay: float = 0.0):
-    def _gen():
-        for i in range(0, len(msg), step):
-            yield f"data: {msg[i:i+step]}\n\n"
-            if delay > 0:
-                time.sleep(delay)
-        yield "event: done\ndata: end\n\n"
-    return Response(stream_with_context(_gen()),
-                    mimetype="text/event-stream",
-                    headers={
-                        "Cache-Control": "no-cache",
-                        "Connection": "keep-alive",
-                        "X-Accel-Buffering": "no",
-                    })
-
 def sse_response(q: str):
-    # Non-symptom → stream the fixed “about the bot” message
+    # Non-symptom → stream fixed message via model streamer
     if not looks_like_symptom(q):
-        return stream_fixed_message(
-            NON_SYMPTOM_MSG,
-            step=1,       # 1 = letter-by-letter
-            delay=0.0     # add e.g. 0.01 for typewriter feel
-        )
+        prompt = build_repeat_prompt(NON_SYMPTOM_MSG)
+        return stream_model_prompt(prompt)
 
-    # Red flags → stream the caution message
+    # Red flags → stream fixed message via model streamer
     if classify(q) == "red":
-        return stream_fixed_message(
-            "I’m noticing possible red flags based on what you wrote. "
-            "Please seek prompt in-person care before starting exercise. "
-            "General advice: rest, gentle breathing, comfortable positions. "
-            "This is not medical advice.",
-            step=1,
-            delay=0.0
-        )
+        prompt = build_repeat_prompt(RED_MSG)
+        return stream_model_prompt(prompt)
 
-    # Normal streaming generation
+    # Normal symptom → stream generated answer via the same streamer
     key = classify(q)
     g = EXDB.get(key, {}) if key else {}
     g = {"moves": (g.get("moves") or [])[:6]} if g else {}
     grounding = json.dumps(g, ensure_ascii=False)
 
     prompt = build_prompt(q, grounding)
-    inputs = tok(prompt, return_tensors="pt")
-    inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-
-    def event_stream():
-        try:
-            for chunk in stream_generate(inputs):
-                yield f"data: {chunk}\n\n"
-        except GeneratorExit:
-            return
-        except Exception as e:
-            yield f"event: error\ndata: {type(e).__name__}: {e}\n\n"
-        finally:
-            yield "event: done\ndata: end\n\n"
-
-    return Response(stream_with_context(event_stream()),
-                    mimetype="text/event-stream",
-                    headers={
-                        "Cache-Control": "no-cache",
-                        "Connection": "keep-alive",
-                        "X-Accel-Buffering": "no",
-                    })
+    return stream_model_prompt(prompt)
 
 app = Flask(__name__, template_folder='.')
 
@@ -251,10 +212,9 @@ def events():
 def root():
     if request.method == "POST":
         q = request.form.get("q", "")
-        a = respond(q)  # non-streaming fallback
-        return render_template("index.html", a=a, q=q)
-    return render_template("index.html", a=None, q=None)
+        return render_template("index.html", q=q)
+    return render_template("index.html", q=None)
 
 if __name__ == "__main__":
     # Bound to loopback only (localhost) for safety; change host to "0.0.0.0" if you need LAN access
-    app.run(host="127.0.0.1", port=8000, debug=False)
+    app.run(host="127.0.0.1", port=8000, debug=False, threaded=True)
