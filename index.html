@@ -1,0 +1,107 @@
+<!doctype html>
+    <title>
+        Exercise Chatbot
+    </title>
+
+    <style>
+        body {
+            font-family:system-ui,-apple-system,Segoe UI,Roboto;
+            max-width:720px;
+            margin:40px auto;
+            line-height:1.5
+        }
+
+        textarea {
+            width:100%;
+            height:110px;
+            padding:12px
+        }
+    
+        button {
+            padding:10px 16px;
+            border:0;
+            border-radius:10px;
+            cursor:pointer
+        }
+
+        .card {
+            background:#f7f7f8;
+            padding:16px;
+            border-radius:12px;
+            margin-top:16px;
+            white-space:pre-wrap
+        }
+
+        .card.id {
+            font-weight: bold;
+            padding:16px;
+            margin-top:16px;
+            white-space:pre-wrap
+        }
+
+        .small {
+            font-size:12px;
+            color:#555
+        }
+
+        .row {
+            display:flex;
+            gap:8px
+        }
+    </style>
+
+    <h1>
+        Exercise Chatbot (Local, Streaming)
+    </h1>
+
+    <form id="f">
+        <label>Describe your symptoms:</label>
+        <textarea name="q" placeholder="e.g., mild lower back pain after sitting long hours, no numbness..."></textarea>
+        <br><br>
+        <div class="row">
+            <button id="btn" type="submit">Get suggestions</button>
+            <button id="stop" type="button" disabled>Stop</button>
+        </div>
+    </form>
+    
+    <div class="card">
+        <strong>
+            Assistant:
+        </strong> 
+        <div id="out"></div>
+    </div>
+
+    <p class="small">⚠️ Educational only. Not medical advice. If you have severe pain or red-flag symptoms, seek urgent care.</p>
+        
+    <script>
+        let es = null;
+        const form = document.getElementById('f');
+        const out  = document.getElementById('out');
+        const btn  = document.getElementById('btn');
+        const stop = document.getElementById('stop');
+
+        function cleanup(){
+            if (es) { 
+                es.close(); es = null; 
+            }
+            btn.disabled = false; btn.textContent = 'Get suggestions';
+            stop.disabled = true;
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (es) es.close();
+            const q = new FormData(form).get('q') || '';
+            out.textContent = '';
+            btn.disabled = true; btn.textContent = 'Thinking…';
+            stop.disabled = false;
+            // *** Key change: stream from the SAME route '/' ***
+            es = new EventSource('/events?q=' + encodeURIComponent(q));
+            es.onmessage = (ev) => { out.textContent += ev.data; window.scrollTo(0, document.body.scrollHeight); };
+            es.addEventListener('done', cleanup);
+            es.onerror = cleanup;
+        });
+
+        stop.addEventListener('click', () => { cleanup(); });
+    </script>
+</html>

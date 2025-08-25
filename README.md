@@ -10,14 +10,14 @@ To build a chatbot using Gemini or an open-source LLM that suggests safe and rec
 
 ## Tools
 
-- Language Model: Google Gemini or HuggingFace (Mistral?)
+- Language Model: HuggingFace
 - Interface: Flask or FastAPI
 - Prompt Safety: System prompts for safety
 - Hosting: Local env
 
 ## Steps
 
-1. Research Gemini API and other alternative LLMs that can be used
+1. Research HuggingFace and other alternative LLMs that can be used
 2. Create prompts for pain and exercise suggestions 
 3. Build the interface (on console first, then GUI)
 4. Test some common queries

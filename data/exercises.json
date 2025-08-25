@@ -1,0 +1,33 @@
+{
+  "lower_back_pain_mild": {
+    "screening": ["no recent trauma", "no numbness/tingling", "no fever", "pain < 6/10"],
+    "tips": [
+      "5–10 min gentle walking",
+      "Pelvic tilts (2x10)",
+      "Knee-to-chest stretch (2x20s/side)",
+      "Cat-cow (1–2 min)"
+    ],
+    "avoid": ["heavy lifting", "deep forward bends early"],
+    "see_doctor_if": ["pain > 7/10", "leg weakness", "bladder/bowel issues", "pain > 2 weeks"]
+  },
+  "neck_stiffness": {
+    "screening": ["no whiplash", "no radiating arm pain/weakness"],
+    "tips": [
+      "Chin tucks (2x10, slow)",
+      "Upper-trap stretch (2x20s/side)",
+      "Scapular retractions (2x10)",
+      "Frequent micro-breaks (every 30–45 min)"
+    ],
+    "avoid": ["high-velocity neck rotations"]
+  },
+  "knee_pain_mild": {
+    "screening": ["no swelling after trauma", "no locking/giving-way"],
+    "tips": [
+      "Quad sets (2x10)",
+      "Straight-leg raises (2x10)",
+      "Sit-to-stand from high chair (2x8)",
+      "5–10 min cycling with low resistance"
+    ],
+    "avoid": ["deep squats initially", "running first days"]
+  }
+}
