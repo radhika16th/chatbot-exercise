@@ -4,6 +4,7 @@
     </title>
 
     <style>
+        /* ===== Page baseline ===== */
         body {
             font-family:system-ui,-apple-system,Segoe UI,Roboto;
             max-width:720px;
@@ -24,6 +25,7 @@
             cursor:pointer
         }
 
+        /* The chat bubble container */
         .card {
             background:#f7f7f8;
             padding:16px;
@@ -49,20 +51,22 @@
             gap:8px
         }
 
-        /* The assistant bubble look */
-        /* label spacing */
+        /* ===== Assistant bubble look & spacing ===== */
+
+        /* label "Assistant:" spacing under the bold label */
         .card strong { 
             display:block; 
             margin:0 0 4px; 
         }
 
-        /* AI content */
+        /* The assistant content block (everything under the label) */
         .assistant {
             padding-left: 16px;        /* indent under “Assistant:” */
             font-size: 1.05rem;
-            line-height: 1.6;           /* was 1.9 */
+            line-height: 1.6;
         }
 
+         /* Remove top margin on the very first element (usually the first <h4>) */
         .assistant > :first-child { 
             margin-top: 0 !important; 
         }
@@ -109,67 +113,97 @@
         
     <script>
         (() => {
-        let es = null;
-        const form = document.getElementById('f');
-        const out  = document.getElementById('out');   // <div id="out" class="assistant"></div> recommended
-        const btn  = document.getElementById('btn');
-        const stop = document.getElementById('stop');
 
-        let rawBuffer = "";  // full text accumulator
+        // ===== DOM refs =====
+        let es = null;  // EventSource for SSE
+        const form = document.getElementById('f');     // <form id="f">...</form>
+        const out  = document.getElementById('out');   // where streamed HTML appears
+        const btn  = document.getElementById('btn');   // <button id="btn">...</button>
+        const stop = document.getElementById('stop');  // <button id="stop">...</button>
 
+        // Accumulates the full raw text as it streams (we reformat it every chunk)
+        let rawBuffer = "";
+
+        // UI helpers
         function setUI(busy) {
-            btn.disabled = busy;
-            btn.textContent = busy ? 'Thinking…' : 'Get suggestions';
-            stop.disabled = !busy;
+            btn.disabled = busy; // Disable the button while thinking
+            btn.textContent = busy ? 'Thinking…' : 'Get suggestions'; // Update button text
+            stop.disabled = !busy; // Enable the stop button while thinking
         }
-        function cleanup() { if (es) { es.close(); es = null; } setUI(false); }
 
-        function escapeHtml(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+        // Cleanup function to close the EventSource and reset UI
+        function cleanup() { 
+            if (es) { 
+                es.close(); es = null; 
+            } setUI(false); 
+        }
 
+        // HTML escape utility
+        function escapeHtml(s){ 
+            return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); 
+        }
+
+        // Live formatter
         function renderPretty(text){
-            text = (text || '').replace(/\r/g, '').trim();
+            text = (text || '').replace(/\r/g, '').trim(); // Normalize line endings
 
-            // a) Add a space when a sentence is glued to the next word: "seat.Do" -> "seat. Do"
+            // Add a space when a sentence is glued to the next word: "seat.Do" -> "seat. Do"
             text = text.replace(/([.!?])(?=[A-Za-z])/g, '$1 ');
 
-            // b) Make sure headings start on their own line (handles "...worsens.Exercise Suggestions:")
+            // Make sure headings start on their own line (handles "...worsens.Exercise Suggestions:")
             text = text.replace(
                 /([^\n])\s*(?=(Screening Confirmation:|Exercise Suggestions?:|Movements?:|Things to avoid:|Disclaimer:))/gi,
                 (_, a) => a + "\n"
             );
 
-            // c) Put numbers on a new line if glued: "etc.2." -> "etc.\n2."
+            // Put numbers on a new line if glued: "etc.2." -> "etc.\n2."
             text = text.replace(/:\s*(\d+\.)/g, ':\n$1')
                         .replace(/([.?!])\s*(\d+\.)/g, '$1\n$2');
 
-            // d) Light paragraph breaks between sentences that look like paragraph starts
+            // Light paragraph breaks between sentences that look like paragraph starts
             text = text.replace(/([.?!])\s+(?=[A-Z(])/g, '$1\n\n');
 
+            // Split into lines for further processing
             const lines = text.split(/\n+/);
+
+            // Heading 
             const headingRx = /^(screening confirmation:|exercise suggestions?:|movements?:|things to avoid:|disclaimer:)/i;
 
+            // Heading
             let html = '';
             let inList = false;
 
             for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
+                let line = lines[i].trim(); // Trim whitespace from the line
+                if (!line) continue; // Skip empty lines
 
+                // Heading
                 if (headingRx.test(line)) {
-                if (inList) { html += '</ol>'; inList = false; }
+                if (inList) { 
+                    html += '</ol>'; 
+                    inList = false; 
+                }
+
                 const m = line.match(headingRx);
                 const title = m[1].replace(/^\w/, ch => ch.toUpperCase());
                 const rest = line.slice(m[0].length).trim();
+                
                 html += `<h4>${escapeHtml(title)}</h4>`;
-                if (rest) html += `<p>${escapeHtml(rest)}</p>`;
+                if (rest) html += `<p>${escapeHtml(rest)}</p>`; // Add paragraph for rest of the heading
                 continue;
                 }
 
                 // Numbered list item ("1. ...")
                 let m = line.match(/^(\d+)\.\s*(.*)$/);
                 if (m) {
-                if (!inList) { html += '<ol>'; inList = true; }
+                if (!inList) { 
+                    html += '<ol>'; 
+                    inList = true; 
+                }
+
                 let item = (m[2] || '').trim();
+
+                // Merge subsequent lines into the same <li> until the next "n." or a heading
                 while (i + 1 < lines.length) {
                     const peek = lines[i + 1].trim();
                     if (!peek) { i++; continue; }
@@ -177,21 +211,30 @@
                     item += (item && !/[.?!:]$/.test(item) ? ' ' : '') + peek;
                     i++;
                 }
-                item = item.replace(/\s*\d+\.\s*$/, ''); // strip trailing “2.” if glued
+
+                // If the model glued the next "2." to the end of this item, strip it
+                item = item.replace(/\s*\d+\.\s*$/, '');
+
+                // If empty (rare), keep layout stable with a nbsp
                 if (!item) item = '&nbsp;';
+
                 html += `<li>${escapeHtml(item)}</li>`;
                 continue;
-                }
+            }
 
                 // Regular paragraph
-                if (inList) { html += '</ol>'; inList = false; }
+                if (inList) { 
+                    html += '</ol>'; 
+                    inList = false; 
+                }
                 html += `<p>${escapeHtml(line)}</p>`;
             }
-            if (inList) html += '</ol>';
+            if (inList) html += '</ol>'; // Close any open list
 
-            return html;  // ⬅️ IMPORTANT: no placeholder <p></p>
+            return html;
         }
 
+        // Submit -> open SSE stream, re-render on every chunk
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (es) es.close();
@@ -202,14 +245,17 @@
             out.classList.remove('raw'); // we render HTML immediately
             setUI(true);
 
+            // Stream from the Flask SSE endpoint
             es = new EventSource('/events?q=' + encodeURIComponent(q));
 
+            // Called for each chunk from the server: accumulate + format live
             es.onmessage = (ev) => {
             rawBuffer += ev.data;
-            out.innerHTML = renderPretty(rawBuffer);   // <-- format WHILE streaming
+            out.innerHTML = renderPretty(rawBuffer);   // format WHILE streaming
             window.scrollTo(0, document.body.scrollHeight);
             };
 
+            // Server signals 'done' at the end of stream
             es.addEventListener('done', () => { cleanup(); });
             es.onerror = () => { cleanup(); };
         });

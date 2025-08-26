@@ -10,6 +10,7 @@
     "avoid": ["heavy lifting", "deep forward bends early"],
     "see_doctor_if": ["pain > 7/10", "leg weakness", "bladder/bowel issues", "pain > 2 weeks"]
   },
+
   "neck_stiffness": {
     "screening": ["no whiplash", "no radiating arm pain/weakness"],
     "tips": [
@@ -20,6 +21,7 @@
     ],
     "avoid": ["high-velocity neck rotations"]
   },
+
   "knee_pain_mild": {
     "screening": ["no swelling after trauma", "no locking/giving-way"],
     "tips": [
@@ -29,5 +31,223 @@
       "5–10 min cycling with low resistance"
     ],
     "avoid": ["deep squats initially", "running first days"]
+  },
+
+  "shoulder_impingement_mild": {
+    "screening": ["no fall/dislocation", "pain < 6/10", "no night pain that wakes you every night"],
+    "tips": [
+      "Pendulum circles (1–2 min, small)",
+      "Scapular retractions (2x10)",
+      "Wall slides in pain-free range (2x8–10)",
+      "Doorway pec stretch (2x20s/side)",
+      "Sidelying external rotation with light object (2x8/side)",
+      "Thoracic extension over towel/foam (1–2 min)"
+    ],
+    "avoid": ["painful overhead presses early", "behind-the-neck motions"],
+    "see_doctor_if": ["resting/night pain persists", "weakness lifting arm", "deformity after trauma"]
+  },
+
+  "frozen_shoulder_early": {
+    "screening": ["gradual stiffness", "no traumatic injury", "pain < 6/10 at rest"],
+    "tips": [
+      "Pendulum sway (1–2 min)",
+      "Table slides (flexion) to mild stretch (2x10)",
+      "Towel-assisted external rotation at side (2x10)",
+      "Wall crawl (2x8–10, slow)",
+      "Heat 5–10 min before exercise"
+    ],
+    "avoid": ["forcing end range", "sudden jerky stretches"],
+    "see_doctor_if": ["rapid loss of motion", "diabetes with severe stiffness", "unremitting night pain"]
+  },
+
+  "de_quervain_tenosynovitis_mild": {
+    "screening": ["pain at thumb side of wrist", "no acute tear/trauma"],
+    "tips": [
+      "Thumb abduction isometrics (5x10s gentle)",
+      "Wrist radial/ulnar deviation in tiny range (2x10)",
+      "Forearm stretch (extensors) (2x20s)",
+      "Thumb opposition slides along index-to-little finger (2x10)",
+      "Frequent micro-breaks from gripping"
+    ],
+    "avoid": ["forceful pinching", "repetitive heavy texting/thumb swipes"],
+    "see_doctor_if": ["swelling/warmth with severe pain", "grip weakness", "no progress in 2–3 weeks"]
+  },
+
+  "carpal_tunnel_early": {
+    "screening": ["hand tingling mostly at night", "symptoms ease with shaking hand", "no severe weakness"],
+    "tips": [
+      "Median nerve glide (very gentle, 5x5s)",
+      "Tendon glides (2x5 patterns)",
+      "Wrist neutral rests/ergonomics (set desk height)",
+      "Forearm flexor stretch (2x20s)",
+      "Hourly micro-breaks"
+    ],
+    "avoid": ["deep wrist flexion under load", "prolonged gripping"],
+    "see_doctor_if": ["thumb weakness", "constant numbness", "symptoms worsen despite 2–3 weeks care"]
+  },
+
+  "tension_headache_muscular": {
+    "screening": ["headache with neck/shoulder tightness", "no fever/neurologic signs", "no head trauma"],
+    "tips": [
+      "Diaphragmatic breathing (2–3 min)",
+      "Chin tucks (2x10, slow)",
+      "Upper-trap & levator stretches (2x20s/side)",
+      "Suboccipital release over 2 tennis balls (1–2 min)",
+      "Scapular retractions (2x10)"
+    ],
+    "avoid": ["prolonged forward head posture", "teeth clenching"],
+    "see_doctor_if": ["sudden 'worst headache'", "neurologic symptoms", "fever/neck stiffness"]
+  },
+
+  "tmj_jaw_discomfort_mild": {
+    "screening": ["clicking/pain with chewing", "no jaw trauma/dislocation"],
+    "tips": [
+      "Nasal diaphragmatic breathing (2–3 min)",
+      "Tongue-on-palate resting posture practice (1–2 min)",
+      "Gentle controlled opening in mirror (10 reps)",
+      "Masseter/temporal self-massage (1–2 min)",
+      "Upper-trap and pec stretches (2x20s)"
+    ],
+    "avoid": ["wide yawns", "chewy foods/gum initially"],
+    "see_doctor_if": ["jaw locking", "deviation with severe pain", "trauma history"]
+  },
+
+  "rib_strain_mild": {
+    "screening": ["localized rib pain with movement/breath", "no trauma with shortness of breath"],
+    "tips": [
+      "Lateral costal breathing—hand on side ribs (2–3 min)",
+      "Open-book thoracic rotations (2x8/side, gentle)",
+      "Thread-the-needle stretch (2x8/side)",
+      "Seated side-bend stretch (2x20s/side)"
+    ],
+    "avoid": ["deep painful twists", "heavy coughing without support (hug pillow)"],
+    "see_doctor_if": ["breathing difficulty", "fever", "recent significant trauma"]
+  },
+
+  "lateral_hip_pain_gtps": {
+    "screening": ["pain/tenderness on outer hip", "no recent fall"],
+    "tips": [
+      "Side-lying hip abduction (2x10/side)",
+      "Isometric hip abduction wall push (5x10s/side)",
+      "Glute bridge (2x10)",
+      "Figure-4 stretch (2x20s/side)",
+      "Short walk breaks (5–10 min)"
+    ],
+    "avoid": ["lying on painful side without pillow", "crossed-leg sitting for long periods"],
+    "see_doctor_if": ["night pain persists", "radiating numbness/weakness", "no improvement in 2–3 weeks"]
+  },
+
+  "hip_flexor_tightness_sitting": {
+    "screening": ["stiff front hip after sitting", "no groin numbness/fever"],
+    "tips": [
+      "Half-kneeling hip flexor stretch (2x20s/side)",
+      "Glute squeezes (2x10)",
+      "Hip hinges to comfortable range (2x8)",
+      "Gentle walking breaks every 30–45 min",
+      "Thoracic extension over chair (1–2 min)"
+    ],
+    "avoid": ["long sitting without breaks"],
+    "see_doctor_if": ["sharp groin pain with weight bearing", "click/lock sensations worsening"]
+  },
+
+  "adductor_strain_grade1": {
+    "screening": ["mild inner-thigh pull", "able to walk", "no significant swelling/bruising"],
+    "tips": [
+      "Isometric adduction (knees squeeze pillow, 5x10s)",
+      "Side-lying hip adduction (2x8/side)",
+      "Short-range Copenhagen (knees bent, 2x6/side)",
+      "Adductor/groin stretch (2x20s/side)"
+    ],
+    "avoid": ["side lunges early", "sprinting/cutting"],
+    "see_doctor_if": ["large bruise/swelling", "pop with weakness", "no progress in 2–3 weeks"]
+  },
+
+  "quad_strain_grade1": {
+    "screening": ["mild front-thigh pull", "able to walk", "no rapid swelling"],
+    "tips": [
+      "Isometric quad set (5x10s)",
+      "Short-arc quads over towel (2x10)",
+      "Heel slides (2x10)",
+      "Sit-to-stand to high chair (2x8)",
+      "Gentle cycling (5–10 min)"
+    ],
+    "avoid": ["sprinting", "deep squats early"],
+    "see_doctor_if": ["large swelling/bruising", "sudden pop with weakness"]
+  },
+
+  "calf_strain_grade1": {
+    "screening": ["mild calf pull", "no sudden pop", "able to walk"],
+    "tips": [
+      "Isometric calf press into floor (5x15–20s)",
+      "Double-leg calf raises (2x12)",
+      "Eccentric heel lowers (2x8/side, slow)",
+      "Calf stretch (knee straight/bent, 2x20s each)"
+    ],
+    "avoid": ["hills/sprints early"],
+    "see_doctor_if": ["sudden snap with weakness", "swelling/redness/warmth", "pain at rest"]
+  },
+
+  "patellofemoral_pain": {
+    "screening": ["front-of-knee ache with stairs/sitting", "no locking/giving-way"],
+    "tips": [
+      "Quad sets (2x10)",
+      "Step-ups to low step (2x8/side)",
+      "Wall sits short holds (5x10–15s, pain-free)",
+      "Hip abduction band walks (2x8/side)",
+      "Ankles-to-knees foam roll (light, 1–2 min)"
+    ],
+    "avoid": ["deep knee flexion early", "downhill running initially"],
+    "see_doctor_if": ["knee swelling/locking", "giving-way", "pain worsens over 2–3 weeks"]
+  },
+
+  "patellar_tendinopathy_mild": {
+    "screening": ["pain under kneecap/patellar tendon", "gradual onset", "no large swelling"],
+    "tips": [
+      "Isometric wall sit holds (5x30s, pain-free)",
+      "Slow decline squat to shallow depth (2x8)",
+      "Step-downs small range (2x8/side)",
+      "Hip/glute strengthening: clamshells (2x10/side)"
+    ],
+    "avoid": ["jumping/plyometrics early", "deep squats with pain"],
+    "see_doctor_if": ["pain > 7/10 with daily tasks", "swelling/redness", "no progress 3–4 weeks"]
+  },
+
+  "ankle_dorsiflexion_stiffness_post_immobilization": {
+    "screening": ["stiff ankle after boot/cast, cleared to mobilize", "able to bear weight"],
+    "tips": [
+      "Ankle pumps (2x20)",
+      "Knee-to-wall dorsiflexion mobilization (2x10/side, gentle)",
+      "Calf stretch (2x20s/side)",
+      "Short flat walks (5–10 min)",
+      "Seated ankle alphabet (1–2 rounds)"
+    ],
+    "avoid": ["running/jumping early"],
+    "see_doctor_if": ["sharp joint pain", "swelling that worsens", "numbness/tingling"]
+  },
+
+  "sciatic_irritation_mild_no_red_flags": {
+    "screening": ["leg ache/tingle without progressive weakness", "no bladder/bowel issues", "no saddle numbness"],
+    "tips": [
+      "Supine diaphragmatic breathing (2–3 min)",
+      "Nerve glide (sciatic slider) very gentle (2x10/side)",
+      "Pelvic tilts (2x10)",
+      "Cat–cow (1–2 min)",
+      "Short walk breaks (5–10 min)"
+    ],
+    "avoid": ["prolonged sitting without breaks", "deep forward bends early"],
+    "see_doctor_if": ["progressive weakness", "numbness in groin/saddle area", "bladder/bowel changes"]
+  },
+  
+  "doms_general_soreness": {
+    "screening": ["onset 12–48h after new activity", "no trauma", "pain < 6/10"],
+    "tips": [
+      "Easy walk or cycle (5–10 min)",
+      "Gentle mobility of worked muscles (1–2 min)",
+      "Light stretching to comfort (2x20s/area)",
+      "Hydration + easy breathing (2–3 min)",
+      "Sleep and lighter activity day"
+    ],
+    "avoid": ["max effort repeats on sore area", "aggressive deep tissue early"],
+    "see_doctor_if": ["severe swelling/dark urine", "fever", "pain > 3–4 days"]
   }
 }
